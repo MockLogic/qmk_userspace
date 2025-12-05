@@ -14,12 +14,13 @@
 //
 //
 // For full documentation, see
-// https://getreuer.info/posts/keyboards/select-word
+// https://getreuer.info/posts/keyboards/select_word
 
 #include "select_word.h"
+#include "mocklogic.h"  // For layer definitions
 
-// Mac users, uncomment this line:
-// #define MAC_HOTKEYS
+// Runtime OS detection: Check if Mac base layer (layer 0) is active
+#define IS_MAC_MODE() (get_highest_layer(default_layer_state) == _MAC_BASE)
 
 enum { STATE_NONE, STATE_SELECTED, STATE_WORD, STATE_FIRST_LINE, STATE_LINE };
 
@@ -37,11 +38,11 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
     const uint8_t all_mods = mods;
 #endif  // NO_ACTION_ONESHOT
     if ((all_mods & MOD_MASK_SHIFT) == 0) {  // Select word.
-#ifdef MAC_HOTKEYS
-      register_code(KC_LALT);
-#else
-      register_code(KC_LCTL);
-#endif  // MAC_HOTKEYS
+      if (IS_MAC_MODE()) {
+        register_code(KC_LALT);
+      } else {
+        register_code(KC_LCTL);
+      }
       if (state == STATE_NONE) {
         SEND_STRING(SS_TAP(X_RGHT) SS_TAP(X_LEFT));
       }
@@ -54,11 +55,11 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
 #ifndef NO_ACTION_ONESHOT
         clear_oneshot_mods();
 #endif  // NO_ACTION_ONESHOT
-#ifdef MAC_HOTKEYS
-        SEND_STRING(SS_LCTL("a" SS_LSFT("e")));
-#else
-        SEND_STRING(SS_TAP(X_HOME) SS_LSFT(SS_TAP(X_END)));
-#endif  // MAC_HOTKEYS
+        if (IS_MAC_MODE()) {
+          SEND_STRING(SS_LCTL("a" SS_LSFT("e")));
+        } else {
+          SEND_STRING(SS_TAP(X_HOME) SS_LSFT(SS_TAP(X_END)));
+        }
         set_mods(mods);
         state = STATE_FIRST_LINE;
       } else {
@@ -74,11 +75,11 @@ bool process_select_word(uint16_t keycode, keyrecord_t* record,
     case STATE_WORD:
       unregister_code(KC_RGHT);
       unregister_code(KC_LSFT);
-#ifdef MAC_HOTKEYS
-      unregister_code(KC_LALT);
-#else
-      unregister_code(KC_LCTL);
-#endif  // MAC_HOTKEYS
+      if (IS_MAC_MODE()) {
+        unregister_code(KC_LALT);
+      } else {
+        unregister_code(KC_LCTL);
+      }
       state = STATE_SELECTED;
       break;
 

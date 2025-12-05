@@ -39,6 +39,10 @@ enum mocklogic_keycodes {
     SELWORD,       // Select word/line
     TASK_MGR,      // Windows Task Manager (Ctrl+Shift+Esc)
 
+    // Dual-layer function keys (activates OS-specific FN + Features layer)
+    FN_MAC,        // Mac FN key (activates _MAC_FN + _FEATURES)
+    FN_WIN,        // Windows FN key (activates _WIN_FN + _FEATURES)
+
     // Safe range for keyboard-specific keycodes
     MOCKLOGIC_SAFE_RANGE
 };

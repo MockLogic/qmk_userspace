@@ -6,7 +6,7 @@
 
 // ============================================================================
 // Tap Dance Definitions
-// Tap dance actions array must be in keymap file
+// Tap dance actions array must be in keymap file not userspace file
 // ============================================================================
 
 void td_esc_mouse_finished(tap_dance_state_t *state, void *user_data) {
@@ -49,9 +49,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC,    KC_BSLS,  C(KC_V),  KC_END,   KC_PGDN,
         KC_CAPS,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,             KC_ENT,
         KC_LSFT,           KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,             KC_RSFT,            KC_UP,
-        KC_LCTL,  KC_LOPTN,KC_LCMMD,                           KC_SPC,                              KC_RCMMD,FN_FEAT, KC_NO,      KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RIGHT),
+        KC_LCTL,  KC_LOPTN,KC_LCMMD,                           KC_SPC,                              KC_RCMMD,FN_MAC,  SELWORD,    KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RIGHT),
 
-    // Mac Function Layer (Layer 1 - reserved, unused for now)
+    // Mac Function Layer (Layer 1 - unused for now - Mac specific functions can be added here)
     [_MAC_FN] = LAYOUT_tkl_f13_ansi(
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
@@ -67,27 +67,27 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC,    KC_BSLS,  G(KC_V),  KC_END,   KC_PGDN,
         KC_CAPS,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,             KC_ENT,
         KC_LSFT,           KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,             KC_RSFT,            KC_UP,
-        KC_LCTL,  KC_LWIN, KC_LALT,                            KC_SPC,                              KC_RALT, FN_FEAT, SELWORD,    KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RIGHT),
+        KC_LCTL,  KC_LWIN, KC_LALT,                            KC_SPC,                              KC_RALT, FN_WIN,  SELWORD,    KC_RCTL,  KC_LEFT,  KC_DOWN,  KC_RIGHT),
 
-    // Windows Function Layer (Layer 3 - reserved, unused for now)
+    // Windows Function Layer (Layer 3 - Windows specific functions)
     [_WIN_FN] = LAYOUT_tkl_f13_ansi(
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
+        _______, _______, _______, _______, TASK_MGR, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,
         _______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,            _______,
         _______, _______, _______,                            _______,                             _______, _______, _______,    _______,  _______,  _______,  _______),
 
-    // Features Layer (momentary)
+    // Features Layer (momentary, used with layers 1 or 3, this layer has non-OS specific features and is trigger detecting Function/Features layers active)
     [_FEATURES] = LAYOUT_tkl_f13_ansi(
-        _______, _______, _______, _______, TASK_MGR,RGB_PRESET_1,RGB_PRESET_2,RGB_PRESET_3,RGB_PRESET_4,_______,_______, _______, _______, _______,  _______,  _______,  QK_BOOT,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
+        _______, _______, _______, _______, _______,RGB_PRESET_1,RGB_PRESET_2,RGB_PRESET_3,RGB_PRESET_4,_______,_______, _______, _______, _______,  _______,  _______,  _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    QK_BOOT,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, TOGGLE_AUTOCORRECT,_______,_______,_______, _______, _______, TOGGLE_JIGGLER,_______,_______,_______, _______,             _______,
         _______,          _______, _______, _______, _______, _______, NK_TOGG, _______, _______, _______, _______,             _______,            _______,
         _______, _______, _______,                            _______,                             _______, _______, QK_LEAD,    _______,  _______,  _______,  _______),
 
-    // Gaming Layer
+    // Gaming Layer (disables Windows key and actiavates gaming RGB profile)
     [_GAMING] = LAYOUT_tkl_f13_ansi(
         KC_ESC,  _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
@@ -96,7 +96,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,            _______,
         _______, KC_NO,   _______,                            _______,                             _______, _______, _______,    _______,  _______,  _______,  _______),
 
-    // Mouse Layer
+    // Mouse Layer (provides mouse control keys)
     [_MOUSE] = LAYOUT_tkl_f13_ansi(
         TD(TD_ESC_MOUSE),_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  KC_NO,    KC_NO,    KC_NO,
@@ -105,7 +105,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,            MS_UP,
         _______, _______, _______,                            _______,                             _______, _______, _______,    _______,  MS_LEFT,  MS_DOWN,  MS_RGHT),
 
-    // Kiddo Layer
+    // Kiddo Layer (disables most key inputs and adds fun RGB effects)
     [_KIDDO] = LAYOUT_tkl_f13_ansi(
         TD(TD_ESC_KIDDO),KC_NO,  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,      KC_NO,    KC_NO,    KC_NO,    KC_NO,
         KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,      KC_NO,    KC_NO,    KC_NO,    KC_NO,
@@ -123,7 +123,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,            _______,
         _______, _______, _______,                            _______,                             _______, _______, _______,    _______,  _______,  _______,  _______),
 
-    // Leader Key Layer
+    // Leader Key Layer (Used while leader key is active)
     [_LEADER] = LAYOUT_tkl_f13_ansi(
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,

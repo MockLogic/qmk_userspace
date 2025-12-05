@@ -4,6 +4,7 @@
 #include "mocklogic.h"
 #include "features/select_word.h"
 #include "features/rgb_presets.h"
+#include "features/whack_a_mole.h"
 #include "eeconfig.h"
 #include <string.h>
 
@@ -147,12 +148,14 @@ void leader_end_user(void) {
     else if (leader_sequence_five_keys(KC_M, KC_O, KC_U, KC_S, KC_E)) {
         layer_on(_MOUSE);
     }
-    // KIDDO — Activate kiddo layer with rainbow splash
+    // KIDDO — Activate kiddo layer with whack-a-mole game
     else if (leader_sequence_five_keys(KC_K, KC_I, KC_D, KC_D, KC_O)) {
         layer_on(_KIDDO);
 #ifdef RGB_MATRIX_ENABLE
-        rgb_matrix_mode_noeeprom(RGB_MATRIX_SPLASH);
-        rgb_matrix_sethsv_noeeprom(0, 255, 255);
+        // Set to solid black background so only custom indicators show (mole key + ESC)
+        // Reactive rainbow ripple still works due to RGB_MATRIX_KEYPRESSES
+        rgb_matrix_mode_noeeprom(RGB_MATRIX_SOLID_COLOR);
+        rgb_matrix_sethsv_noeeprom(0, 0, 0);  // Black background
 #endif
     }
     // RGB   — Activate RGB configuration layer
@@ -166,12 +169,49 @@ void leader_end_user(void) {
 // -----------------------------------------------------------------------------
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // Whack-a-mole game (only active on Kiddo layer)
+    if (layer_state_is(_KIDDO)) {
+        // On Kiddo layer, all keys are KC_NO, so we need to look up the actual keycode
+        // from the base layer to know what key was physically pressed
+        uint16_t base_keycode = keycode;
+        if (keycode == KC_NO) {
+            // Look up the keycode from Mac or Windows base layer
+            uint8_t base_layer = get_highest_layer(default_layer_state); // 0 for Mac, 2 for Windows
+            base_keycode = keymap_key_to_keycode(base_layer, record->event.key);
+        }
+
+        if (whack_a_mole_process_key(base_keycode, record)) {
+            return false; // Game consumed the keypress
+        }
+    }
+
     // Select-word feature (returns false when it consumes the event)
     if (!process_select_word(keycode, record, SELWORD)) {
         return false;
     }
 
     switch (keycode) {
+        // Dual-layer function keys
+        case FN_MAC:
+            if (record->event.pressed) {
+                layer_on(_MAC_FN);
+                layer_on(_FEATURES);
+            } else {
+                layer_off(_MAC_FN);
+                layer_off(_FEATURES);
+            }
+            return false;
+
+        case FN_WIN:
+            if (record->event.pressed) {
+                layer_on(_WIN_FN);
+                layer_on(_FEATURES);
+            } else {
+                layer_off(_WIN_FN);
+                layer_off(_FEATURES);
+            }
+            return false;
+
         // Windows-specific shortcuts
         case KC_TASK_VIEW:
             if (record->event.pressed) {
@@ -258,6 +298,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 // -----------------------------------------------------------------------------
+// Layer State Management
+// -----------------------------------------------------------------------------
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    // Initialize whack-a-mole game when entering Kiddo layer
+    if (layer_state_cmp(state, _KIDDO) && !layer_state_cmp(layer_state, _KIDDO)) {
+        whack_a_mole_init();
+    }
+    return state;
+}
+
+// -----------------------------------------------------------------------------
 // RGB Matrix Indicators (portable, keycode-based)
 // -----------------------------------------------------------------------------
 #ifdef RGB_MATRIX_ENABLE
@@ -280,8 +332,19 @@ static void set_led_color_for_keycode(uint8_t layer, uint16_t keycode,
 
 // Features Layer indicators
 void rgb_matrix_indicators_features_layer(void) {
-    // F4 — Task Manager (chartreuse)
-    set_led_color_for_keycode(_FEATURES, TASK_MGR, RGB_CHARTREUSE);
+
+    // Only show these when the Win Fn layer is active
+    if (layer_state_is(_WIN_FN)) {
+        // F4 — Task Manager (green)
+        set_led_color_for_keycode(_WIN_FN, TASK_MGR, RGB_GREEN);
+    }
+
+    // Only show these when the Mac Fn layer is active
+    //if (layer_state_is(_MAC_FN)) {
+    //    // F4 — XXXX (green)
+    //    set_led_color_for_keycode(_MAC_FN, XXXX, RGB_GREEN);
+    //}
+
     // F5–F8 — RGB Presets (chartreuse)
     set_led_color_for_keycode(_FEATURES, RGB_PRESET_1, RGB_CHARTREUSE);
     set_led_color_for_keycode(_FEATURES, RGB_PRESET_2, RGB_CHARTREUSE);
@@ -315,8 +378,9 @@ void rgb_matrix_indicators_features_layer(void) {
     // Leader key (purple)
     set_led_color_for_keycode(_FEATURES, QK_LEAD, RGB_PURPLE);
 
-    // Features layer key itself (purple)
-    set_led_color_for_keycode(_FEATURES, FN_FEAT, RGB_PURPLE);
+    // Features layer keys (purple) - both Mac and Windows variants
+    set_led_color_for_keycode(_FEATURES, FN_MAC, RGB_PURPLE);
+    set_led_color_for_keycode(_FEATURES, FN_WIN, RGB_PURPLE);
 }
 
 // Gaming Layer indicators
@@ -371,10 +435,66 @@ void rgb_matrix_indicators_mouse_layer(void) {
     set_led_color_for_keycode(_MOUSE, KC_NO, 0x28, 0x00, 0x00);
 }
 
+// Helper: Find matrix position for a keycode by searching base layers
+static bool find_keycode_position(uint16_t keycode, uint8_t *out_row, uint8_t *out_col) {
+    // Search Mac base layer first, then Windows base layer
+    for (uint8_t layer = 0; layer <= 2; layer += 2) {  // Layer 0 (Mac) and 2 (Windows)
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                if (keymap_key_to_keycode(layer, (keypos_t){col, row}) == keycode) {
+                    *out_row = row;
+                    *out_col = col;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 // Kiddo Layer indicators
 void rgb_matrix_indicators_kiddo_layer(void) {
-    // ESC to exit (purple)
-    set_led_color_for_keycode(_KIDDO, TD(TD_ESC_KIDDO), RGB_PURPLE);
+    // Update whack-a-mole game state
+    whack_a_mole_task();
+
+    // Check if celebration ripple is active
+    if (whack_a_mole_celebration_active()) {
+        // Ripple effect - check all keys for ripple coloring
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t r, g, b;
+                whack_a_mole_get_celebration_color(row, col, &r, &g, &b);
+                // Only set color if it's non-black (within ripple)
+                if (r != 0 || g != 0 || b != 0) {
+                    uint8_t led = g_led_config.matrix_co[row][col];
+                    if (led != NO_LED) {
+                        rgb_matrix_set_color(led, r, g, b);
+                    }
+                }
+            }
+        }
+    }
+    // Show the active "mole" key
+    else if (whack_a_mole_is_active()) {
+        uint16_t active_key = whack_a_mole_get_active_key();
+        uint8_t r, g, b;
+        whack_a_mole_get_active_color(&r, &g, &b);
+
+        // Find the matrix position for this keycode by searching base layers
+        uint8_t row, col;
+        if (find_keycode_position(active_key, &row, &col)) {
+            uint8_t led = g_led_config.matrix_co[row][col];
+            if (led != NO_LED) {
+                rgb_matrix_set_color(led, r, g, b);
+            }
+        }
+    }
+
+    // ESC to exit (purple) - always show (ESC is always at 0,0)
+    uint8_t led = g_led_config.matrix_co[0][0];
+    if (led != NO_LED) {
+        rgb_matrix_set_color(led, RGB_PURPLE);
+    }
 }
 
 // RGB Config Layer indicators
