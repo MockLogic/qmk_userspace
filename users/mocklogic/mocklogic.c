@@ -21,6 +21,14 @@ void eeconfig_init_user_datablock(void) {
     userspace_config.autocorrect_enabled = true;   // Autocorrect ON by default
     userspace_config.mouse_jiggler_enabled = true; // Jiggler ON by default
     userspace_config.active_rgb_preset = 1;        // Preset 2 (dim white) by default
+
+    // Initialize RGB preset 4 (F8) defaults
+    userspace_config.rgb_preset_mode = RGB_MATRIX_TYPING_HEATMAP;
+    userspace_config.rgb_preset_hue = 0;
+    userspace_config.rgb_preset_sat = 255;
+    userspace_config.rgb_preset_val = 255;
+    userspace_config.rgb_preset_speed = RGB_MATRIX_SPD_STEP * 2;
+
     userspace_config_save();
 }
 
@@ -140,9 +148,9 @@ void leader_end_user(void) {
     // Turn off leader layer when done
     layer_off(_LEADER);
 
-    // GAME  — Toggle gaming layer
+    // GAME  — Enter gaming layer (exit with double-tap ESC)
     if (leader_sequence_four_keys(KC_G, KC_A, KC_M, KC_E)) {
-        layer_invert(_GAMING);
+        layer_on(_GAMING);
     }
     // MOUSE — Activate mouse layer
     else if (leader_sequence_five_keys(KC_M, KC_O, KC_U, KC_S, KC_E)) {
@@ -161,6 +169,7 @@ void leader_end_user(void) {
     // RGB   — Activate RGB configuration layer
     else if (leader_sequence_three_keys(KC_R, KC_G, KC_B)) {
         layer_on(_RGB_CFG);
+        rgb_config_layer_enter();
     }
 }
 
@@ -182,6 +191,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         if (whack_a_mole_process_key(base_keycode, record)) {
             return false; // Game consumed the keypress
+        }
+    }
+
+    // RGB config layer - handle encoder hue controls
+    if (layer_state_is(_RGB_CFG) && record->event.pressed) {
+        switch (keycode) {
+            case RM_HUEU:
+                rgb_config_adjust_hue(RGB_MATRIX_HUE_STEP);
+                return false;
+            case RM_HUED:
+                rgb_config_adjust_hue(-RGB_MATRIX_HUE_STEP);
+                return false;
+            default:
+                break;
         }
     }
 
@@ -280,6 +303,106 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             }
             return false;
 
+        // RGB Config Layer - Effect Selection
+        case RGB_EFF_SOLID:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_SOLID_COLOR);
+            }
+            return false;
+
+        case RGB_EFF_STARLIGHT:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_STARLIGHT_DUAL_HUE);
+            }
+            return false;
+
+        case RGB_EFF_RAINDROPS:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_RAINDROPS);
+            }
+            return false;
+
+        case RGB_EFF_DIGRAIN:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_DIGITAL_RAIN);
+            }
+            return false;
+
+        case RGB_EFF_SPIRAL:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_CYCLE_PINWHEEL);
+            }
+            return false;
+
+        case RGB_EFF_SPLASH:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_MULTISPLASH);
+            }
+            return false;
+
+        case RGB_EFF_RIVER:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_RIVERFLOW);
+            }
+            return false;
+
+        case RGB_EFF_HEATMAP:
+            if (record->event.pressed) {
+                rgb_config_set_effect(RGB_MATRIX_TYPING_HEATMAP);
+            }
+            return false;
+
+        case RGB_CFG_RESET:
+            if (record->event.pressed) {
+                rgb_config_layer_reset();
+            }
+            return false;
+
+        // RGB Config Layer - Adjustments
+        case RGB_BRIGHT_UP:
+            if (record->event.pressed) {
+                rgb_config_adjust_val(RGB_MATRIX_VAL_STEP);
+            }
+            return false;
+
+        case RGB_BRIGHT_DOWN:
+            if (record->event.pressed) {
+                rgb_config_adjust_val(-RGB_MATRIX_VAL_STEP);
+            }
+            return false;
+
+        case RGB_SPEED_UP:
+            if (record->event.pressed) {
+                rgb_config_adjust_speed(RGB_MATRIX_SPD_STEP);
+            }
+            return false;
+
+        case RGB_SPEED_DOWN:
+            if (record->event.pressed) {
+                rgb_config_adjust_speed(-RGB_MATRIX_SPD_STEP);
+            }
+            return false;
+
+        case RGB_SAT_UP:
+            if (record->event.pressed) {
+                rgb_config_adjust_sat(RGB_MATRIX_SAT_STEP);
+            }
+            return false;
+
+        case RGB_SAT_DOWN:
+            if (record->event.pressed) {
+                rgb_config_adjust_sat(-RGB_MATRIX_SAT_STEP);
+            }
+            return false;
+
+        // EEPROM Reset
+        case EEPROM_RESET:
+            if (record->event.pressed) {
+                eeconfig_init();  // Reset all EEPROM to defaults
+                soft_reset_keyboard();  // Restart keyboard
+            }
+            return false;
+
         // Task Manager (Ctrl+Shift+Esc)
         case TASK_MGR:
             if (record->event.pressed) {
@@ -351,6 +474,9 @@ void rgb_matrix_indicators_features_layer(void) {
     set_led_color_for_keycode(_FEATURES, RGB_PRESET_3, RGB_CHARTREUSE);
     set_led_color_for_keycode(_FEATURES, RGB_PRESET_4, RGB_CHARTREUSE);
 
+    // EEPROM Reset (red) - on '0' key
+    set_led_color_for_keycode(_FEATURES, EEPROM_RESET, RGB_RED);
+
     // Autocorrect toggle (blue=on, orange=off)
     if (get_autocorrect_enabled()) {
         set_led_color_for_keycode(_FEATURES, TOGGLE_AUTOCORRECT, RGB_BLUE);
@@ -385,32 +511,18 @@ void rgb_matrix_indicators_features_layer(void) {
 
 // Gaming Layer indicators
 void rgb_matrix_indicators_gaming_layer(void) {
+    // ESC to exit (purple)
+    set_led_color_for_keycode(_GAMING, TD(TD_ESC_GAMING), RGB_PURPLE);
+
     // Highlight WASD
     set_led_color_for_keycode(_GAMING, KC_W, RGB_GREEN);
     set_led_color_for_keycode(_GAMING, KC_A, RGB_GREEN);
     set_led_color_for_keycode(_GAMING, KC_S, RGB_GREEN);
     set_led_color_for_keycode(_GAMING, KC_D, RGB_GREEN);
 
-    // Surrounding keys
-    set_led_color_for_keycode(_GAMING, KC_Q, RGB_WHITE);
+    // A Few Surrounding keys
     set_led_color_for_keycode(_GAMING, KC_E, RGB_ORANGE);
     set_led_color_for_keycode(_GAMING, KC_R, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_F, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_Z, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_X, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_C, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_V, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_TAB, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_LSFT, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_LCTL, RGB_WHITE);
-    set_led_color_for_keycode(_GAMING, KC_SPC, RGB_GREEN);
-
-    // Number keys + grave
-    set_led_color_for_keycode(_GAMING, KC_1, RGB_ORANGE);
-    set_led_color_for_keycode(_GAMING, KC_2, RGB_ORANGE);
-    set_led_color_for_keycode(_GAMING, KC_3, RGB_ORANGE);
-    set_led_color_for_keycode(_GAMING, KC_4, RGB_ORANGE);
-    set_led_color_for_keycode(_GAMING, KC_GRV, RGB_WHITE);
 
     // Disabled keys in dark red
     set_led_color_for_keycode(_GAMING, KC_NO, 0x28, 0x00, 0x00);
@@ -501,6 +613,30 @@ void rgb_matrix_indicators_kiddo_layer(void) {
 void rgb_matrix_indicators_rgb_layer(void) {
     // ESC to exit (purple)
     set_led_color_for_keycode(_RGB_CFG, TD(TD_ESC_RGB), RGB_PURPLE);
+
+    // Effect selection keys (black/off to highlight against active effect)
+    // Subtle effects
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_SOLID,     RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_STARLIGHT, RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_RAINDROPS, RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_DIGRAIN,   RGB_BLACK);
+
+    // Reset to saved preset
+    set_led_color_for_keycode(_RGB_CFG, RGB_CFG_RESET, RGB_BLACK);
+
+    // Crazy effects
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_SPIRAL,  RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_SPLASH,  RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_RIVER,   RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_EFF_HEATMAP, RGB_BLACK);
+
+    // Brightness, Speed, and Saturation controls
+    set_led_color_for_keycode(_RGB_CFG, RGB_BRIGHT_UP,   RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_BRIGHT_DOWN, RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_SPEED_UP,    RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_SPEED_DOWN,  RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_SAT_UP,      RGB_BLACK);
+    set_led_color_for_keycode(_RGB_CFG, RGB_SAT_DOWN,    RGB_BLACK);
 }
 
 // Leader Layer indicators

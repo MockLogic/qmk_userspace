@@ -19,7 +19,16 @@
 #ifdef RGB_MATRIX_ENABLE
     #define RGB_MATRIX_FRAMEBUFFER_EFFECTS
     #define RGB_MATRIX_KEYPRESSES
-    #define ENABLE_RGB_MATRIX_TYPING_HEATMAP
-    #define ENABLE_RGB_MATRIX_SPLASH
+
+    // Enable RGB effects for RGB config layer
+    #define ENABLE_RGB_MATRIX_SOLID_COLOR           // F1: Solid Color
+    #define ENABLE_RGB_MATRIX_STARLIGHT_DUAL_HUE    // F2: Starlight Dual
+    #define ENABLE_RGB_MATRIX_RAINDROPS             // F3: Raindrops
+    #define ENABLE_RGB_MATRIX_DIGITAL_RAIN          // F4: Digital Rain
+    #define ENABLE_RGB_MATRIX_CYCLE_PINWHEEL        // F9: Rainbow Pinwheel
+    #define ENABLE_RGB_MATRIX_MULTISPLASH           // F10: Rainbow splash ripples
+    #define ENABLE_RGB_MATRIX_RIVERFLOW             // F11: Riverflow
+    #define ENABLE_RGB_MATRIX_TYPING_HEATMAP        // F12: Typing Heatmap
+
     #define RGB_DISABLE_WHEN_USB_SUSPENDED
 #endif

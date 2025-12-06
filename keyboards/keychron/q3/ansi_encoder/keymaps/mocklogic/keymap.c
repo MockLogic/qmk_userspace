@@ -3,6 +3,7 @@
 
 #include QMK_KEYBOARD_H
 #include "mocklogic.h"
+#include "features/rgb_presets.h"
 
 // ============================================================================
 // Tap Dance Definitions
@@ -25,15 +26,25 @@ void td_esc_kiddo_finished(tap_dance_state_t *state, void *user_data) {
 
 void td_esc_rgb_finished(tap_dance_state_t *state, void *user_data) {
     if (state->count == 2) {
+        rgb_config_layer_exit();
         layer_off(_RGB_CFG);
+        // Preset 4 (F8) remains active with saved settings
+        userspace_config.active_rgb_preset = 3;
+        userspace_config_save();
     }
 }
 
+void td_esc_gaming_finished(tap_dance_state_t *state, void *user_data) {
+    if (state->count == 2) {
+        layer_off(_GAMING);
+    }
+}
 
 tap_dance_action_t tap_dance_actions[] = {
-    [TD_ESC_MOUSE] = ACTION_TAP_DANCE_FN(td_esc_mouse_finished),
-    [TD_ESC_KIDDO] = ACTION_TAP_DANCE_FN(td_esc_kiddo_finished),
-    [TD_ESC_RGB]   = ACTION_TAP_DANCE_FN(td_esc_rgb_finished)
+    [TD_ESC_MOUSE]  = ACTION_TAP_DANCE_FN(td_esc_mouse_finished),
+    [TD_ESC_KIDDO]  = ACTION_TAP_DANCE_FN(td_esc_kiddo_finished),
+    [TD_ESC_RGB]    = ACTION_TAP_DANCE_FN(td_esc_rgb_finished),
+    [TD_ESC_GAMING] = ACTION_TAP_DANCE_FN(td_esc_gaming_finished)
 };
 
 // ============================================================================
@@ -81,7 +92,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Features Layer (momentary, used with layers 1 or 3, this layer has non-OS specific features and is trigger detecting Function/Features layers active)
     [_FEATURES] = LAYOUT_tkl_f13_ansi(
         _______, _______, _______, _______, _______,RGB_PRESET_1,RGB_PRESET_2,RGB_PRESET_3,RGB_PRESET_4,_______,_______, _______, _______, _______,  _______,  _______,  _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    QK_BOOT,  _______,  _______,  _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,EEPROM_RESET,_______,_______,    QK_BOOT,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
         _______, TOGGLE_AUTOCORRECT,_______,_______,_______, _______, _______, TOGGLE_JIGGLER,_______,_______,_______, _______,             _______,
         _______,          _______, _______, _______, _______, _______, NK_TOGG, _______, _______, _______, _______,             _______,            _______,
@@ -89,12 +100,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     // Gaming Layer (disables Windows key and actiavates gaming RGB profile)
     [_GAMING] = LAYOUT_tkl_f13_ansi(
-        KC_ESC,  _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
+        TD(TD_ESC_GAMING),_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,    _______,  _______,  _______,  _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,
+        _______, _______, KC_W,    KC_E,    KC_R,    _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
+        _______, KC_A,    KC_S,    KC_D,    _______, _______, _______, _______, _______, _______, _______, _______,             _______,
         _______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,            _______,
-        _______, KC_NO,   _______,                            _______,                             _______, _______, _______,    _______,  _______,  _______,  _______),
+        _______, KC_NO,   _______,                            _______,                             _______, _______, KC_NO,     _______,  _______,  _______,  _______)  ,
 
     // Mouse Layer (provides mouse control keys)
     [_MOUSE] = LAYOUT_tkl_f13_ansi(
@@ -114,14 +125,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO,            KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,               KC_NO,              KC_NO,
         KC_NO,   KC_NO,   KC_NO,                              KC_NO,                               KC_NO,   KC_NO,   KC_NO,      KC_NO,    KC_NO,    KC_NO,    KC_NO),
 
-    // RGB Configuration Layer
+    // RGB Configuration Layer (Custom keycodes for effect selection and adjustments)
     [_RGB_CFG] = LAYOUT_tkl_f13_ansi(
-        TD(TD_ESC_RGB),_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,_______,    _______,  _______,  _______,  _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,    _______,  _______,  _______,  _______,
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,
-        _______,          _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,             _______,            _______,
-        _______, _______, _______,                            _______,                             _______, _______, _______,    _______,  _______,  _______,  _______),
+        TD(TD_ESC_RGB),RGB_EFF_SOLID,RGB_EFF_STARLIGHT,RGB_EFF_RAINDROPS,RGB_EFF_DIGRAIN,KC_NO,KC_NO,KC_NO,RGB_CFG_RESET,RGB_EFF_SPIRAL,RGB_EFF_SPLASH,RGB_EFF_RIVER,RGB_EFF_HEATMAP,KC_NO,KC_NO,KC_NO,KC_NO,
+        KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   RGB_SAT_DOWN,RGB_SAT_UP, KC_NO,    KC_NO,    KC_NO,    KC_NO,
+        KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,      KC_NO,    KC_NO,    KC_NO,    KC_NO,
+        KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,               KC_NO,
+        KC_NO,            KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,               KC_NO,              RGB_BRIGHT_UP,
+        KC_NO,   KC_NO,   KC_NO,                              KC_NO,                               KC_NO,   KC_NO,   KC_NO,      KC_NO,    RGB_SPEED_DOWN,RGB_BRIGHT_DOWN,RGB_SPEED_UP),
 
     // Leader Key Layer (Used while leader key is active)
     [_LEADER] = LAYOUT_tkl_f13_ansi(
@@ -146,7 +157,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [_FEATURES] = {ENCODER_CCW_CW(C(KC_PMNS), C(KC_PPLS))},  // Zoom in/out
     [_GAMING]   = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
     [_MOUSE]    = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [_KIDDO]    = {ENCODER_CCW_CW(RM_HUED, RM_HUEU)},  // Change hue for fun
+    [_KIDDO]    = {ENCODER_CCW_CW(KC_NO, KC_NO)},  // Disabbled
     [_RGB_CFG]  = {ENCODER_CCW_CW(RM_HUED, RM_HUEU)},  // Hue control
     [_LEADER]   = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)}
 };

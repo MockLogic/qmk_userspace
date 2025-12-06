@@ -35,9 +35,29 @@ enum mocklogic_keycodes {
     RGB_PRESET_3,  // F7 - Bright warm white
     RGB_PRESET_4,  // F8 - Fun RGB reactive
 
+    // RGB config layer - effect selection
+    RGB_EFF_SOLID,      // Solid color
+    RGB_EFF_STARLIGHT,  // Starlight dual
+    RGB_EFF_RAINDROPS,  // Raindrops
+    RGB_EFF_DIGRAIN,    // Digital rain
+    RGB_EFF_SPIRAL,     // Rainbow pinwheel
+    RGB_EFF_SPLASH,     // Rainbow splash ripples
+    RGB_EFF_RIVER,      // Riverflow
+    RGB_EFF_HEATMAP,    // Typing heatmap
+    RGB_CFG_RESET,      // Reset to saved RGB config
+
+    // RGB config layer - adjustments
+    RGB_BRIGHT_UP,      // Increase brightness
+    RGB_BRIGHT_DOWN,    // Decrease brightness
+    RGB_SPEED_UP,       // Increase animation speed
+    RGB_SPEED_DOWN,     // Decrease animation speed
+    RGB_SAT_UP,         // Increase saturation
+    RGB_SAT_DOWN,       // Decrease saturation
+
     // Utility keys
     SELWORD,       // Select word/line
     TASK_MGR,      // Windows Task Manager (Ctrl+Shift+Esc)
+    EEPROM_RESET,  // Reset EEPROM to defaults
 
     // Dual-layer function keys (activates OS-specific FN + Features layer)
     FN_MAC,        // Mac FN key (activates _MAC_FN + _FEATURES)
@@ -49,9 +69,10 @@ enum mocklogic_keycodes {
 
 // Tap Dance declarations
 enum {
-    TD_ESC_MOUSE,  // Double-tap ESC to exit mouse layer
-    TD_ESC_KIDDO,  // Double-tap ESC to exit kiddo layer
-    TD_ESC_RGB     // Double-tap ESC to exit RGB config layer
+    TD_ESC_MOUSE,   // Double-tap ESC to exit mouse layer
+    TD_ESC_KIDDO,   // Double-tap ESC to exit kiddo layer
+    TD_ESC_RGB,     // Double-tap ESC to exit RGB config layer
+    TD_ESC_GAMING   // Double-tap ESC to exit gaming layer
 };
 
 // Shorter aliases
@@ -71,12 +92,18 @@ enum {
 
 // EEPROM configuration structure
 typedef union {
-    uint32_t raw;
+    uint64_t raw;  // Expanded to 64 bits to fit RGB preset data
     struct {
         bool     autocorrect_enabled :1;
         bool     mouse_jiggler_enabled :1;
         uint8_t  active_rgb_preset :2;  // 0-3 for 4 presets
         uint8_t  reserved :4;            // Reserved for future use
+        // RGB Preset 4 (F8) custom configuration (5 bytes = 40 bits)
+        uint8_t  rgb_preset_mode;        // RGB effect mode
+        uint8_t  rgb_preset_hue;         // Hue (0-255)
+        uint8_t  rgb_preset_sat;         // Saturation (0-255)
+        uint8_t  rgb_preset_val;         // Brightness (0-255)
+        uint8_t  rgb_preset_speed;       // Animation speed (0-255)
     };
 } userspace_config_t;
 
