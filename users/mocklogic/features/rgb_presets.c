@@ -30,19 +30,19 @@ static const rgb_preset_config_t rgb_presets_fixed[] = {
         .val = 0,
         .speed = 0
     },
-    // Preset 1 (F6): Dim neutral white (default)
+    // Preset 1 (F6): Dim warm white (default)
     {
         .mode = RGB_MATRIX_SOLID_COLOR,
-        .hue = 0,
-        .sat = 0,
+        .hue = 15,
+        .sat = 40,
         .val = 60,
         .speed = 0
     },
-    // Preset 2 (F7): Bright neutral white
+    // Preset 2 (F7): Bright warm white
     {
         .mode = RGB_MATRIX_SOLID_COLOR,
-        .hue = 0,
-        .sat = 0,
+        .hue = 15,
+        .sat = 40,
         .val = 200,
         .speed = 0
     }

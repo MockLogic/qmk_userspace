@@ -1,59 +1,210 @@
-# QMK Userspace
+# MockLogic's QMK Userspace
 
-This is a template repository which allows for an external set of QMK keymaps to be defined and compiled. This is useful for users who want to maintain their own keymaps without having to fork the main QMK repository.
+This repository contains my custom QMK firmware configurations for multiple keyboards, using QMK's external userspace system. This approach allows me to maintain shared functionality across keyboards while keeping keyboard-specific code minimal.
 
-## Howto configure your build targets
+**Repository:** https://github.com/MockLogic/qmk_userspace
 
-1. Run the normal `qmk setup` procedure if you haven't already done so -- see [QMK Docs](https://docs.qmk.fm/#/newbs) for details.
-1. Fork this repository
-1. Clone your fork to your local machine
-1. Enable userspace in QMK config using `qmk config user.overlay_dir="$(realpath qmk_userspace)"`
-1. Add a new keymap for your board using `qmk new-keymap`
-    * This will create a new keymap in the `keyboards` directory, in the same location that would normally be used in the main QMK repository. For example, if you wanted to add a keymap for the Planck, it will be created in `keyboards/planck/keymaps/<your keymap name>`
-    * You can also create a new keymap using `qmk new-keymap -kb <your_keyboard> -km <your_keymap>`
-    * Alternatively, add your keymap manually by placing it in the location specified above.
-    * `layouts/<layout name>/<your keymap name>/keymap.*` is also supported if you prefer the layout system
-1. Add your keymap(s) to the build by running `qmk userspace-add -kb <your_keyboard> -km <your_keymap>`
-    * This will automatically update your `qmk.json` file
-    * Corresponding `qmk userspace-remove -kb <your_keyboard> -km <your_keymap>` will delete it
-    * Listing the build targets can be done with `qmk userspace-list`
-1. Commit your changes
+## Configured Keyboards
 
-## Howto build with GitHub
+- ✅ **Keychron Q3** (TKL, primary development keyboard)
+- ✅ **Keychron Q1v2** (75% compact)
+- ⏸️ **GMMK Pro** (75% compact, needs migration)
+- 🎮 **ZSA Moonlander** (split ergonomic, separate gaming config)
 
-1. In the GitHub Actions tab, enable workflows
-1. Push your changes above to your forked GitHub repository
-1. Look at the GitHub Actions for a new actions run
-1. Wait for the actions run to complete
-1. Inspect the Releases tab on your repository for the latest firmware build
+## Key Features
 
-## Howto build locally
+This userspace implements a comprehensive set of features designed for productivity and accessibility:
 
-1. Run the normal `qmk setup` procedure if you haven't already done so -- see [QMK Docs](https://docs.qmk.fm/#/newbs) for details.
-1. Fork this repository
-1. Clone your fork to your local machine
-1. `cd` into this repository's clone directory
-1. Set global userspace path: `qmk config user.overlay_dir="$(realpath .)"` -- you MUST be located in the cloned userspace location for this to work correctly
-    * This will be automatically detected if you've `cd`ed into your userspace repository, but the above makes your userspace available regardless of your shell location.
-1. Compile normally: `qmk compile -kb your_keyboard -km your_keymap` or `make your_keyboard:your_keymap`
+- **Autocorrect** - Keyboard-level spell checking with custom dictionary (primary feature for dyslexia assistance)
+- **RGB Presets** - 4 RGB presets including warm white correction for Keychron blue LED tint
+- **RGB Config Layer** - Live RGB customization with EEPROM persistence
+- **Leader Key Sequences** - Text-based commands for layer access and missing keys (END, INS, PRINT)
+- **Gaming Layer** - Disables Windows key, highlights WASD, gaming RGB effects
+- **Mouse Control** - Full mouse control via keyboard (emergency fallback)
+- **Mouse Jiggler** - Prevents screen timeout for remote work
+- **Whack-a-Mole Game** - Interactive RGB game for toddler entertainment (COVID legacy)
+- **Word Selection** - OS-aware smart word selection (SELWORD)
+- **Dual-Layer FN Keys** - FN_MAC/FN_WIN activate both OS-specific and common feature layers
+- **EEPROM Persistence** - Settings saved across power cycles
 
-Alternatively, if you configured your build targets above, you can use `qmk userspace-compile` to build all of your userspace targets at once.
+## Quick Start
 
-## Extra info
+### Initial Setup
 
-If you wish to point GitHub actions to a different repository, a different branch, or even a different keymap name, you can modify `.github/workflows/build_binaries.yml` to suit your needs.
+1. Clone the QMK firmware repository (if not already done):
+   ```bash
+   qmk setup
+   ```
 
-To override the `build` job, you can change the following parameters to use a different QMK repository or branch:
+2. Clone this userspace repository:
+   ```bash
+   git clone https://github.com/MockLogic/qmk_userspace.git
+   cd qmk_userspace
+   ```
+
+3. Configure QMK to use this userspace:
+   ```bash
+   qmk config user.overlay_dir="$(realpath .)"
+   ```
+
+### Building Firmware
+
+Build for specific keyboard:
+```bash
+# Keychron Q3
+qmk compile -kb keychron/q3/ansi_encoder -km mocklogic
+
+# Keychron Q1v2
+qmk compile -kb keychron/q1v2/ansi_encoder -km mocklogic
 ```
-    with:
-      qmk_repo: qmk/qmk_firmware
-      qmk_ref: master
+
+Flash firmware:
+```bash
+qmk flash -kb keychron/q3/ansi_encoder -km mocklogic
 ```
 
-If you wish to manually manage `qmk_firmware` using git within the userspace repository, you can add `qmk_firmware` as a submodule in the userspace directory instead. GitHub Actions will automatically use the submodule at the pinned revision if it exists, otherwise it will use the default latest revision of `qmk_firmware` from the main repository.
+Or use QMK Toolbox to flash the compiled `.bin` file.
 
-This can also be used to control which fork is used, though only upstream `qmk_firmware` will have support for external userspace until other manufacturers update their forks.
+## Architecture
 
-1. (First time only) `git submodule add https://github.com/qmk/qmk_firmware.git`
-1. (To update) `git submodule update --init --recursive`
-1. Commit your changes to your userspace repository
+### Userspace Structure
+
+```
+users/mocklogic/
+├── mocklogic.h              # Layer definitions, keycode enums, declarations
+├── mocklogic.c              # Main userspace implementation
+├── rules.mk                 # Shared build configuration
+├── autocorrect_data.txt     # Custom autocorrect dictionary
+├── README.md                # Architecture documentation
+└── features/                # Modular feature implementations
+    ├── select_word.h/c      # Smart word selection
+    ├── rgb_presets.h/c      # RGB preset system
+    └── whack_a_mole.h/c     # Kid mode game
+
+keyboards/.../keymaps/mocklogic/
+├── keymap.c                 # Physical layout ONLY (per-keyboard)
+└── rules.mk                 # Keyboard-specific flags (if needed)
+```
+
+### Design Philosophy
+
+**Keep keyboard-specific files minimal.** The goal is to have all logic in `users/mocklogic/` so that:
+
+1. **Features are portable** - RGB indicators, layer logic, custom keycodes work across all keyboards
+2. **Maintenance is simple** - Fix a bug once, it's fixed everywhere
+3. **New keyboards are easy** - Just define the physical layout, everything else works automatically
+
+**What goes in userspace:**
+- ✅ All custom keycodes and implementations
+- ✅ All layer logic and definitions
+- ✅ RGB indicators (using portable `set_led_color_for_keycode()`)
+- ✅ Leader key sequences
+- ✅ Feature implementations (autocorrect, mouse jiggler, RGB presets, etc.)
+- ✅ EEPROM configuration management
+
+**What goes in keyboard-specific files:**
+- ❗ Physical key layouts only
+- ❗ Tap dance arrays (QMK requirement)
+- ❗ Encoder maps (if different per keyboard)
+
+## Layer System
+
+All keyboards use a consistent 10-layer structure:
+
+1. **MAC_BASE** (Layer 0) - Mac base layer (physical OS switch)
+2. **MAC_FN** (Layer 1) - Mac function layer
+3. **WIN_BASE** (Layer 2) - Windows base layer (physical OS switch)
+4. **WIN_FN** (Layer 3) - Windows function layer
+5. **FEATURES** (Layer 4) - Feature control layer
+6. **GAMING** (Layer 5) - Gaming mode
+7. **MOUSE** (Layer 6) - Mouse control
+8. **KIDDO** (Layer 7) - Kid mode with whack-a-mole
+9. **RGB_CFG** (Layer 8) - RGB configuration
+10. **LEADER** (Layer 9) - Leader key active indicator
+
+> **Note:** Layers 0-3 must remain in this order for Keychron physical OS switch compatibility.
+
+## Leader Key Sequences
+
+Access special layers and missing keys via Leader sequences:
+
+| Sequence | Function |
+|----------|----------|
+| Leader + `GAME` | Enter gaming layer (exit: double-tap ESC) |
+| Leader + `MOUSE` | Enter mouse layer (exit: double-tap ESC) |
+| Leader + `KIDDO` | Enter kid mode (exit: double-tap ESC) |
+| Leader + `RGB` | Enter RGB config layer (exit/save: double-tap ESC) |
+| Leader + `END` | Send End key (for 75% keyboards) |
+| Leader + `INS` | Send Insert key (for 75% keyboards) |
+| Leader + `PRINT` | Send Print Screen key (for 75% keyboards) |
+
+## RGB Presets
+
+- **F5:** No backlighting (LEDs off)
+- **F6:** Dim warm white (hue=15, sat=40, val=60)
+- **F7:** Bright warm white (hue=15, sat=40, val=200)
+- **F8:** Customizable preset (default: Typing Heatmap, configure via RGB Config Layer)
+
+> **Note:** Warm white settings (hue=15, sat=40) compensate for blue tint in Keychron RGB LEDs.
+
+## Customizing for Your Own Use
+
+If you want to fork this repository for your own keyboards:
+
+1. Fork this repository on GitHub
+2. Clone your fork locally
+3. Update `users/mocklogic/` with your custom features
+4. Create keyboard-specific directories for your keyboards in `keyboards/`
+5. Update build targets in `qmk.json` (or use `qmk userspace-add`)
+6. Commit and push your changes
+
+### Autocorrect Dictionary
+
+Edit `users/mocklogic/autocorrect_data.txt` to add your own common typos. Format:
+```
+typo -> correction
+teh -> the
+```
+
+Then rebuild and flash.
+
+## Building with GitHub Actions
+
+1. Enable workflows in the GitHub Actions tab
+2. Push changes to your fork
+3. Wait for the build to complete
+4. Download compiled firmware from the Releases tab
+
+To use a different QMK branch or fork, edit `.github/workflows/build_binaries.yml`:
+```yaml
+with:
+  qmk_repo: qmk/qmk_firmware
+  qmk_ref: master
+```
+
+## Documentation
+
+- [users/mocklogic/README.md](users/mocklogic/README.md) - Userspace architecture documentation
+- [QMK External Userspace Docs](https://docs.qmk.fm/#/newbs_external_userspace) - Official QMK documentation
+
+## Resources
+
+- [QMK Firmware Repository](https://github.com/qmk/qmk_firmware)
+- [QMK Documentation](https://docs.qmk.fm/)
+- [My QMK Tricks Reddit Post](https://www.reddit.com/r/olkb/comments/t4imri/qmk_tricks/) - Collection of advanced QMK features and tricks
+
+## License
+
+GPL-2.0-or-later (following QMK Firmware licensing)
+
+## Technical Highlights
+
+What makes this setup special:
+
+1. **Portable RGB System** - `set_led_color_for_keycode()` works across different LED matrices
+2. **OS-Aware Features** - Automatic Mac/Windows adaptation (e.g., SELWORD)
+3. **Dual-Layer FN Keys** - FN_MAC/FN_WIN activate OS-specific + common layers simultaneously
+4. **Minimal Per-Keyboard Code** - <100 lines per keyboard, all logic in userspace
+5. **Live RGB Customization** - RGB Config layer with EEPROM persistence
+6. **Comprehensive EEPROM** - Settings persist across power cycles
+7. **Leader-Based UX** - Text sequences easier to remember than key combos

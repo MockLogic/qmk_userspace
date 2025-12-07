@@ -171,6 +171,18 @@ void leader_end_user(void) {
         layer_on(_RGB_CFG);
         rgb_config_layer_enter();
     }
+    // END   — Send End key (for 75% keyboards missing this key)
+    else if (leader_sequence_three_keys(KC_E, KC_N, KC_D)) {
+        tap_code(KC_END);
+    }
+    // INS   — Send Insert key (for 75% keyboards missing this key)
+    else if (leader_sequence_three_keys(KC_I, KC_N, KC_S)) {
+        tap_code(KC_INS);
+    }
+    // PRINT — Send Print Screen key (for 75% keyboards missing this key)
+    else if (leader_sequence_five_keys(KC_P, KC_R, KC_I, KC_N, KC_T)) {
+        tap_code(KC_PSCR);
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -460,6 +472,8 @@ void rgb_matrix_indicators_features_layer(void) {
     if (layer_state_is(_WIN_FN)) {
         // F4 — Task Manager (green)
         set_led_color_for_keycode(_WIN_FN, TASK_MGR, RGB_GREEN);
+        // Show Desktop (green)
+        set_led_color_for_keycode(_WIN_FN, G(KC_D), RGB_GREEN);
     }
 
     // Only show these when the Mac Fn layer is active
