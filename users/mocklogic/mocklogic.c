@@ -474,13 +474,15 @@ void rgb_matrix_indicators_features_layer(void) {
         set_led_color_for_keycode(_WIN_FN, TASK_MGR, RGB_GREEN);
         // Show Desktop (green)
         set_led_color_for_keycode(_WIN_FN, G(KC_D), RGB_GREEN);
+        // Clipboard History (green)
+        set_led_color_for_keycode(_WIN_FN, G(KC_V), RGB_GREEN);
     }
 
     // Only show these when the Mac Fn layer is active
-    //if (layer_state_is(_MAC_FN)) {
-    //    // F4 — XXXX (green)
-    //    set_led_color_for_keycode(_MAC_FN, XXXX, RGB_GREEN);
-    //}
+    if (layer_state_is(_MAC_FN)) {
+        // Paste (green)
+        set_led_color_for_keycode(_MAC_FN, C(KC_V), RGB_GREEN);
+    }
 
     // F5–F8 — RGB Presets (chartreuse)
     set_led_color_for_keycode(_FEATURES, RGB_PRESET_1, RGB_CHARTREUSE);
@@ -616,10 +618,13 @@ void rgb_matrix_indicators_kiddo_layer(void) {
         }
     }
 
-    // ESC to exit (purple) - always show (ESC is always at 0,0)
-    uint8_t led = g_led_config.matrix_co[0][0];
-    if (led != NO_LED) {
-        rgb_matrix_set_color(led, RGB_PURPLE);
+    // ESC to exit (purple) - find ESC key position in base layer
+    uint8_t esc_row, esc_col;
+    if (find_keycode_position(KC_ESC, &esc_row, &esc_col)) {
+        uint8_t led = g_led_config.matrix_co[esc_row][esc_col];
+        if (led != NO_LED) {
+            rgb_matrix_set_color(led, RGB_PURPLE);
+        }
     }
 }
 

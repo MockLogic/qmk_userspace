@@ -91,8 +91,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     // Features Layer (momentary, used with layers 1 or 3, this layer has non-OS specific features)
     [_FEATURES] = LAYOUT_ansi_82(
-        _______,            _______, _______, _______, _______,RGB_PRESET_1,RGB_PRESET_2,RGB_PRESET_3,RGB_PRESET_4,_______,_______, _______, _______, QK_BOOT,  _______,
-        _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,EEPROM_RESET,_______,_______,_______,            _______,
+        _______,            _______, _______, _______, _______,RGB_PRESET_1,RGB_PRESET_2,RGB_PRESET_3,RGB_PRESET_4,_______,_______, _______, _______, _______,  _______,
+        _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,EEPROM_RESET,_______,_______,QK_BOOT,            _______,
         _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,            _______,
         _______, TOGGLE_AUTOCORRECT,_______,_______,_______, _______, _______, TOGGLE_JIGGLER,_______,_______,_______, _______,          _______,            _______,
         _______,          _______, _______, _______, _______, _______, NK_TOGG, _______, _______, _______, _______,          _______,  _______,
@@ -151,15 +151,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [_MAC_BASE] = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [_MAC_FN]   = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
+    [_MAC_FN]   = {ENCODER_CCW_CW(LCMD(KC_PMNS), LCMD(KC_PPLS))},  // Zoom in/out
     [_WIN_BASE] = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [_WIN_FN]   = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [_FEATURES] = {ENCODER_CCW_CW(C(KC_PMNS), C(KC_PPLS))},  // Zoom in/out
-    [_GAMING]   = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
-    [_MOUSE]    = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
+    [_WIN_FN]   = {ENCODER_CCW_CW(C(KC_PMNS), C(KC_PPLS))},  // Zoom in/out
+    [_FEATURES] = {ENCODER_CCW_CW(_______, _______)},
+    [_GAMING]   = {ENCODER_CCW_CW(_______, _______)},
+    [_MOUSE]    = {ENCODER_CCW_CW(_______, _______)},
     [_KIDDO]    = {ENCODER_CCW_CW(KC_NO, KC_NO)},  // Disabled
     [_RGB_CFG]  = {ENCODER_CCW_CW(RM_HUED, RM_HUEU)},  // Hue control
-    [_LEADER]   = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)}
+    [_LEADER]   = {ENCODER_CCW_CW(_______, _______)}
 };
 #endif
 

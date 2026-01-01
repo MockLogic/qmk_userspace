@@ -7,6 +7,9 @@ TAP_DANCE_ENABLE = yes
 MOUSEKEY_ENABLE = yes
 EXTRAKEY_ENABLE = yes
 
+# Disable unused features to save space
+CAPS_WORD_ENABLE = no
+
 # Mouse Jiggler Support
 POINTING_DEVICE_ENABLE = yes
 POINTING_DEVICE_DRIVER = custom

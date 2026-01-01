@@ -6,9 +6,9 @@ This repository contains my custom QMK firmware configurations for multiple keyb
 
 ## Configured Keyboards
 
-- ✅ **Keychron Q3** (TKL, primary development keyboard)
-- ✅ **Keychron Q1v2** (75% compact)
-- ⏸️ **GMMK Pro** (75% compact, needs migration)
+- ✅ **Keychron Q3** (TKL, primary development keyboard, physical OS switch)
+- ✅ **Keychron Q1v2** (75% compact, physical OS switch)
+- ✅ **GMMK Pro** (75% compact, automatic OS detection)
 - 🎮 **ZSA Moonlander** (split ergonomic, separate gaming config)
 
 ## Key Features
@@ -16,6 +16,7 @@ This repository contains my custom QMK firmware configurations for multiple keyb
 This userspace implements a comprehensive set of features designed for productivity and accessibility:
 
 - **Autocorrect** - Keyboard-level spell checking with custom dictionary (primary feature for dyslexia assistance)
+- **OS Detection** - Automatic OS detection for GMMK Pro (Keychrons use physical switch)
 - **RGB Presets** - 4 RGB presets including warm white correction for Keychron blue LED tint
 - **RGB Config Layer** - Live RGB customization with EEPROM persistence
 - **Leader Key Sequences** - Text-based commands for layer access and missing keys (END, INS, PRINT)
@@ -56,6 +57,9 @@ qmk compile -kb keychron/q3/ansi_encoder -km mocklogic
 
 # Keychron Q1v2
 qmk compile -kb keychron/q1v2/ansi_encoder -km mocklogic
+
+# GMMK Pro
+qmk compile -kb gmmk/pro/rev1/ansi -km mocklogic
 ```
 
 Flash firmware:
@@ -123,6 +127,17 @@ All keyboards use a consistent 10-layer structure:
 10. **LEADER** (Layer 9) - Leader key active indicator
 
 > **Note:** Layers 0-3 must remain in this order for Keychron physical OS switch compatibility.
+
+### OS Detection (GMMK Pro)
+
+The GMMK Pro lacks a physical OS toggle switch, so it uses QMK's OS detection feature to automatically detect the connected operating system:
+
+- **macOS/iOS detected** → Switches to MAC_BASE layer (layer 0)
+- **Windows/Linux/Unknown** → Defaults to WIN_BASE layer (layer 2)
+
+OS detection occurs during keyboard initialization (when plugged in or restarted). If you switch between operating systems, simply replug the keyboard or restart it to re-detect the OS.
+
+The Keychron keyboards continue to use their physical OS toggle switch and do not use OS detection.
 
 ## Leader Key Sequences
 
